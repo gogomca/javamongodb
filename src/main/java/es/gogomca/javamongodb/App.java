@@ -1,5 +1,6 @@
 package es.gogomca.javamongodb;
 
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import org.bson.Document;
@@ -9,9 +10,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
 import com.mongodb.ServerApi;
 import com.mongodb.ServerApiVersion;
-import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
 
 public class App {
 	private static Logger logger = Logger.getLogger(App.class.getName());
@@ -33,15 +32,19 @@ public class App {
 		var settings = MongoClientSettings.builder().applyConnectionString(mongoConnectionString).serverApi(serverApi).build();
 
 		// Create a new client and connect to Atlas.
-		try (MongoClient mongoClient = MongoClients.create(settings)) {
+		try (var mongoClient = MongoClients.create(settings)) {
 			try {
 				// Send a ping to confirm a successful connection to one of the existing databases.
-				MongoDatabase database = mongoClient.getDatabase(databaseName);
+				var database = mongoClient.getDatabase(databaseName);
 				database.runCommand(new Document("ping", 1));
 				logger.info("Pinged your deployment. You successfully connected to MongoDB!");
 			} catch (MongoException e) {
 				e.printStackTrace();
+				return;
 			}
+
+			var databases = mongoClient.listDatabases().into(new ArrayList<>());
+			databases.forEach(db -> logger.info(db.toJson()));
 		}
 	}
 
